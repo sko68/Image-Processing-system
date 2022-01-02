@@ -11,7 +11,9 @@
 
 
 Mat image;
+Mat outImage;
 CString strFileName;
+TCHAR szFilter[] = _T("jpg file(*.jpg)|*.jpg|bmp file(*.bmp)|*.bmp|所有文件(*.*)|*.*||");  //文件格式过滤
 
 
 #ifdef _DEBUG
@@ -97,6 +99,7 @@ BEGIN_MESSAGE_MAP(CMFCApplication1Dlg, CDialogEx)
 	ON_COMMAND(ID_Gaussian_High_Pass, &CMFCApplication1Dlg::OnGaussianHighPass)
 	ON_COMMAND(ID_DrawHist, &CMFCApplication1Dlg::OnDrawhist)
 	ON_COMMAND(ID_EqualizeHist, &CMFCApplication1Dlg::OnEqualizehist)
+	ON_COMMAND(ID_Save, &CMFCApplication1Dlg::OnSave)
 END_MESSAGE_MAP()
 
 // CMFCApplication1Dlg 消息处理程序
@@ -216,9 +219,7 @@ void CMFCApplication1Dlg::OnClose()
 void CMFCApplication1Dlg::OnBnClickedOpenpicture()
 {
 	// TODO: 在此添加控件通知处理程序代码
-		// TODO: 在此添加控件通知处理程序代码
-	CFileDialog dlg(true, _T("*.bmp"), NULL, OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY,
-		_T("ALL Files (*.*) |*.*||"), NULL);
+	CFileDialog dlg(true, _T("jpg"), _T(".jpg"), OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY, szFilter, this);
 	dlg.m_ofn.lpstrTitle = _T("Open Image");// 打开文件对话框的标题名
 	if (!dlg.DoModal() == IDOK)
 		return;
@@ -227,7 +228,7 @@ void CMFCApplication1Dlg::OnBnClickedOpenpicture()
 	CFileStatus status;
 	if (!CFile::GetStatus(strFileName, status))
 	{
-		MessageBox(strFileName + "您未选择图片或图片不存在", "提示", MB_OK);
+		MessageBox("您未选择新图片或图片不存在", "提示", MB_OK);
 		return;
 	}
 
@@ -278,6 +279,33 @@ void CMFCApplication1Dlg::ShowImage(Mat image, int IDCNum)
 		}
 	}
 }
+void CMFCApplication1Dlg::OnSave()
+{
+	// TODO: 在此添加命令处理程序代码
+	if (outImage.empty())
+	{
+		CString str;
+		str.SetString(_T("还没有图片可保存哦!"));
+		MessageBox(str);
+		return;
+	}
+	Save();
+}
+
+void CMFCApplication1Dlg::Save(/*UINT ID*/)
+{
+	// 构造保存文件对话框    
+	CFileDialog fileDlg(FALSE, _T("jpg"), _T(".jpg"), OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, szFilter, this);
+	fileDlg.m_ofn.lpstrTitle = _T("保存");  //保存对话窗口标题名
+	CString picturePath;
+	if (IDOK == fileDlg.DoModal())  //按下确认键
+	{
+		picturePath = fileDlg.GetPathName();  //文件路径
+	}
+
+	string outFileName = picturePath.GetBuffer(0);
+	imwrite(outFileName, outImage);
+}
 
 void CMFCApplication1Dlg::OnBnClickedClosepicture()
 {
@@ -325,9 +353,8 @@ void CMFCApplication1Dlg::OnLog()
 {
 	// TODO: 在此添加命令处理程序代码
 	if (IsExistImage()) {
-		Mat dest;
-		LogTransform1(image, dest);
-		ShowImage(dest, IDC_ShowPicture2);
+		LogTransform1(image, outImage);
+		ShowImage(outImage, IDC_ShowPicture2);
 	}
 }
 
@@ -360,9 +387,8 @@ void CMFCApplication1Dlg::OnReverse()  //图像反转
 {
 	// TODO: 在此添加命令处理程序代码
 	if (IsExistImage()) {
-		Mat dest;
-		Reverse(image, dest);
-		ShowImage(dest, IDC_ShowPicture2);
+		Reverse(image, outImage);
+		ShowImage(outImage, IDC_ShowPicture2);
 	}
 }
 
@@ -384,9 +410,8 @@ void CMFCApplication1Dlg::OnSegmented()     //分段线性变换
 {
 	// TODO: 在此添加命令处理程序代码
 	if (IsExistImage()) {
-		Mat dest;
-		Segmented(image, dest);
-		ShowImage(dest, IDC_ShowPicture2);
+		Segmented(image, outImage);
+		ShowImage(outImage, IDC_ShowPicture2);
 	}
 }
 
@@ -414,9 +439,8 @@ void CMFCApplication1Dlg::OnBoxfilter()      //方框滤波
 {
 	// TODO: 在此添加命令处理程序代码
 	if (IsExistImage()) {
-		Mat dest;
-		boxFilter(image, dest, -1, Size(7, 7));
-		ShowImage(dest, IDC_ShowPicture2);
+		boxFilter(image, outImage, -1, Size(7, 7));
+		ShowImage(outImage, IDC_ShowPicture2);
 	}
 }
 
@@ -424,9 +448,8 @@ void CMFCApplication1Dlg::OnBlur()     //均值滤波
 {
 	// TODO: 在此添加命令处理程序代码
 	if (IsExistImage()) {
-		Mat dest;
-		blur(image, dest, Size(7, 7));
-		ShowImage(dest, IDC_ShowPicture2);
+		blur(image, outImage, Size(7, 7));
+		ShowImage(outImage, IDC_ShowPicture2);
 	}
 }
 
@@ -434,9 +457,8 @@ void CMFCApplication1Dlg::OnGaussianblur()     //高斯滤波
 {
 	// TODO: 在此添加命令处理程序代码
 	if (IsExistImage()) {
-		Mat dest;
-		GaussianBlur(image, dest, Size(7, 7), 0, 0);
-		ShowImage(dest, IDC_ShowPicture2);
+		GaussianBlur(image, outImage, Size(7, 7), 0, 0);
+		ShowImage(outImage, IDC_ShowPicture2);
 	}
 }
 
@@ -444,9 +466,8 @@ void CMFCApplication1Dlg::OnMedianblur()  //中值滤波
 {
 	// TODO: 在此添加命令处理程序代码
 	if (IsExistImage()) {
-		Mat dest;
-		medianBlur(image, dest, 7);
-		ShowImage(dest, IDC_ShowPicture2);
+		medianBlur(image, outImage, 7);
+		ShowImage(outImage, IDC_ShowPicture2);
 	}
 }
 
@@ -455,9 +476,8 @@ void CMFCApplication1Dlg::OnBilateralfilter()    //双边滤波
 {
 	// TODO: 在此添加命令处理程序代码
 	if (IsExistImage()) {
-		Mat dest;
-		bilateralFilter(image, dest, 25, 25 * 2, 25 / 2);
-		ShowImage(dest, IDC_ShowPicture2);
+		bilateralFilter(image, outImage, 25, 25 * 2, 25 / 2);
+		ShowImage(outImage, IDC_ShowPicture2);
 	}
 }
 
@@ -466,9 +486,8 @@ void CMFCApplication1Dlg::OnRoberts()
 {
 	// TODO: 在此添加命令处理程序代码
 	if (IsExistImage()) {
-		Mat dest;
-		Roberts(image, dest);
-		ShowImage(dest, IDC_ShowPicture2);
+		Roberts(image, outImage);
+		ShowImage(outImage, IDC_ShowPicture2);
 	}
 }
 
@@ -492,9 +511,8 @@ void CMFCApplication1Dlg::OnPrewitt()
 {
 	// TODO: 在此添加命令处理程序代码
 	if (IsExistImage()) {
-		Mat dest;
-		Prewitt(image, dest);
-		ShowImage(dest, IDC_ShowPicture2);
+		Prewitt(image, outImage);
+		ShowImage(outImage, IDC_ShowPicture2);
 	}
 }
 
@@ -524,9 +542,8 @@ void CMFCApplication1Dlg::OnSobel()
 {
 	// TODO: 在此添加命令处理程序代码
 	if (IsExistImage()) {
-		Mat dest;
-		Sobel(image, dest);
-		ShowImage(dest, IDC_ShowPicture2);
+		Sobel(image, outImage);
+		ShowImage(outImage, IDC_ShowPicture2);
 	}
 }
 
@@ -556,12 +573,11 @@ void CMFCApplication1Dlg::OnLaplace()
 {
 	// TODO: 在此添加命令处理程序代码
 	if (IsExistImage()) {
-		Mat dest;
 		GaussianBlur(image, image, Size(3, 3), 0, 0);
 		//cvtColor(image, image, CV_BGR2GRAY);
-		Laplacian(image, dest, CV_16S, 3, 1, 0);
-		convertScaleAbs(dest, dest);
-		ShowImage(dest, IDC_ShowPicture2);
+		Laplacian(image, outImage, CV_16S, 3, 1, 0);
+		convertScaleAbs(outImage, outImage);
+		ShowImage(outImage, IDC_ShowPicture2);
 	}
 }
 
@@ -569,11 +585,11 @@ void CMFCApplication1Dlg::OnIdealLowPass()       //理想低通
 {
 	// TODO: 在此添加命令处理程序代码
 	if (IsExistImage()) {
-		if(1 != image.channels())
-		cvtColor(image, image, COLOR_BGR2GRAY);
-		Mat ideal_low = ideal_low_pass_filter(image, 30);
-		ideal_low = ideal_low(Rect(0, 0, image.cols, image.rows));
-		ShowImage(ideal_low, IDC_ShowPicture2);
+		if (1 != image.channels())
+			cvtColor(image, image, COLOR_BGR2GRAY);
+		outImage = ideal_low_pass_filter(image, 30);
+		outImage = outImage(Rect(0, 0, image.cols, image.rows));
+		ShowImage(outImage, IDC_ShowPicture2);
 	}
 }
 
@@ -584,10 +600,10 @@ void CMFCApplication1Dlg::OnButterworthLowPass()   //巴特沃斯低通
 	// TODO: 在此添加命令处理程序代码
 	if (IsExistImage()) {
 		if (1 != image.channels())
-		cvtColor(image, image, COLOR_BGR2GRAY);
-		Mat bw_low = butterworth_low_paass_filter(image, 30,2);
-		bw_low = bw_low(cv::Rect(0, 0, image.cols, image.rows));
-		ShowImage(bw_low, IDC_ShowPicture2);
+			cvtColor(image, image, COLOR_BGR2GRAY);
+		outImage = butterworth_low_paass_filter(image, 30, 2);
+		outImage = outImage(cv::Rect(0, 0, image.cols, image.rows));
+		ShowImage(outImage, IDC_ShowPicture2);
 	}
 }
 
@@ -596,10 +612,10 @@ void CMFCApplication1Dlg::OnGaussianLowPass()  //高斯低通
 	// TODO: 在此添加命令处理程序代码
 	if (IsExistImage()) {
 		if (1 != image.channels())
-		cvtColor(image, image, COLOR_BGR2GRAY);
-		Mat gaussion_low = gaussian_low_pass_filter(image, 30);
-		gaussion_low = gaussion_low(cv::Rect(0, 0, image.cols, image.rows));
-		ShowImage(gaussion_low, IDC_ShowPicture2);
+			cvtColor(image, image, COLOR_BGR2GRAY);
+		outImage = gaussian_low_pass_filter(image, 30);
+		outImage = outImage(cv::Rect(0, 0, image.cols, image.rows));
+		ShowImage(outImage, IDC_ShowPicture2);
 	}
 }
 
@@ -609,10 +625,10 @@ void CMFCApplication1Dlg::OnIdealHighPass()   //理想高通
 	// TODO: 在此添加命令处理程序代码
 	if (IsExistImage()) {
 		if (1 != image.channels())
-		cvtColor(image, image, COLOR_BGR2GRAY);
-		Mat ideal_high = ideal_high_pass_filter(image, 80);
-		ideal_high = ideal_high(cv::Rect(0, 0, image.cols, image.rows));
-		ShowImage(ideal_high, IDC_ShowPicture2);
+			cvtColor(image, image, COLOR_BGR2GRAY);
+		outImage = ideal_high_pass_filter(image, 80);
+		outImage = outImage(cv::Rect(0, 0, image.cols, image.rows));
+		ShowImage(outImage, IDC_ShowPicture2);
 	}
 }
 
@@ -622,10 +638,10 @@ void CMFCApplication1Dlg::OnButterworthHighPass()  //巴特沃斯高通
 	// TODO: 在此添加命令处理程序代码
 	if (IsExistImage()) {
 		if (1 != image.channels())
-		cvtColor(image, image, COLOR_BGR2GRAY);
-		Mat bw_high = butterworth_high_paass_filter(image, 80, 2);
-		bw_high = bw_high(cv::Rect(0, 0, image.cols, image.rows));
-		ShowImage(bw_high, IDC_ShowPicture2);
+			cvtColor(image, image, COLOR_BGR2GRAY);
+		outImage = butterworth_high_paass_filter(image, 80, 2);
+		outImage = outImage(cv::Rect(0, 0, image.cols, image.rows));
+		ShowImage(outImage, IDC_ShowPicture2);
 	}
 }
 
@@ -635,10 +651,10 @@ void CMFCApplication1Dlg::OnGaussianHighPass()   //高斯高通
 	// TODO: 在此添加命令处理程序代码
 	if (IsExistImage()) {
 		if (1 != image.channels())
-		cvtColor(image, image, COLOR_BGR2GRAY);
-		Mat gaussion_high = gaussian_high_pass_filter(image, 80);
-		gaussion_high = gaussion_high(cv::Rect(0, 0, image.cols, image.rows));
-		ShowImage(gaussion_high, IDC_ShowPicture2);
+			cvtColor(image, image, COLOR_BGR2GRAY);
+		outImage = gaussian_high_pass_filter(image, 80);
+		outImage = outImage(cv::Rect(0, 0, image.cols, image.rows));
+		ShowImage(outImage, IDC_ShowPicture2);
 	}
 }
 
@@ -898,55 +914,54 @@ void CMFCApplication1Dlg::OnDrawhist()
 void CMFCApplication1Dlg::OnEqualizehist()
 {
 	// TODO: 在此添加命令处理程序代码
-	Mat dst;
 	Mat dstHist;
-	Equalizehist(image, dst);
-	Drawhist(dst, dstHist);
+	Equalizehist(image, outImage);
+	Drawhist(outImage, dstHist);
 	namedWindow("dstHist", CV_WINDOW_AUTOSIZE);
 	imshow("dstHist", dstHist);
-	ShowImage(dst, IDC_ShowPicture2);
+	ShowImage(outImage, IDC_ShowPicture2);
 
 }
 
 void CMFCApplication1Dlg::Drawhist(Mat& src, Mat& dst)
 {
-		//namedWindow("output", CV_WINDOW_AUTOSIZE);
-		//步骤一：分通道显示
-		vector<Mat>bgr_planes;
-		split(src, bgr_planes);
-		//split(// 把多通道图像分为多个单通道图像 const Mat &src, //输入图像 Mat* mvbegin）// 输出的通道图像数组
+	//namedWindow("output", CV_WINDOW_AUTOSIZE);
+	//步骤一：分通道显示
+	vector<Mat>bgr_planes;
+	split(src, bgr_planes);
+	//split(// 把多通道图像分为多个单通道图像 const Mat &src, //输入图像 Mat* mvbegin）// 输出的通道图像数组
 
-		//步骤二：计算直方图
-		int histsize = 256;
-		float range[] = { 0,256 };
-		const float* histRanges = { range };
-		Mat b_hist, g_hist, r_hist;
-		calcHist(&bgr_planes[0], 1, 0, Mat(), b_hist, 1, &histsize, &histRanges, true, false);
-		calcHist(&bgr_planes[1], 1, 0, Mat(), g_hist, 1, &histsize, &histRanges, true, false);
-		calcHist(&bgr_planes[2], 1, 0, Mat(), r_hist, 1, &histsize, &histRanges, true, false);
+	//步骤二：计算直方图
+	int histsize = 256;
+	float range[] = { 0,256 };
+	const float* histRanges = { range };
+	Mat b_hist, g_hist, r_hist;
+	calcHist(&bgr_planes[0], 1, 0, Mat(), b_hist, 1, &histsize, &histRanges, true, false);
+	calcHist(&bgr_planes[1], 1, 0, Mat(), g_hist, 1, &histsize, &histRanges, true, false);
+	calcHist(&bgr_planes[2], 1, 0, Mat(), r_hist, 1, &histsize, &histRanges, true, false);
 
 
-		//归一化
-		int hist_h = 500;//直方图的图像的高
-		int hist_w = 512; //直方图的图像的宽
-		int bin_w = hist_w / histsize;//直方图的等级
-		Mat histImage(hist_w, hist_h, CV_8UC3, Scalar(0, 0, 0));//绘制直方图显示的图像
-		normalize(b_hist, b_hist, 0, hist_h, NORM_MINMAX, -1, Mat());//归一化
-		normalize(g_hist, g_hist, 0, hist_h, NORM_MINMAX, -1, Mat());
-		normalize(r_hist, r_hist, 0, hist_h, NORM_MINMAX, -1, Mat());
+	//归一化
+	int hist_h = 500;//直方图的图像的高
+	int hist_w = 512; //直方图的图像的宽
+	int bin_w = hist_w / histsize;//直方图的等级
+	Mat histImage(hist_w, hist_h, CV_8UC3, Scalar(0, 0, 0));//绘制直方图显示的图像
+	normalize(b_hist, b_hist, 0, hist_h, NORM_MINMAX, -1, Mat());//归一化
+	normalize(g_hist, g_hist, 0, hist_h, NORM_MINMAX, -1, Mat());
+	normalize(r_hist, r_hist, 0, hist_h, NORM_MINMAX, -1, Mat());
 
-		//步骤三：绘制直方图（render histogram chart）
-		for (int i = 1; i < histsize; i++)
-		{
-			//绘制蓝色分量直方图
-			line(histImage, Point((i - 1) * bin_w, hist_h - cvRound(b_hist.at<float>(i - 1))),Point((i)*bin_w, hist_h - cvRound(b_hist.at<float>(i))), Scalar(255, 0, 0), 2, CV_AA);
-			//绘制绿色分量直方图
-			line(histImage, Point((i - 1) * bin_w, hist_h - cvRound(g_hist.at<float>(i - 1))),Point((i)*bin_w, hist_h - cvRound(g_hist.at<float>(i))), Scalar(0, 255, 0), 2, CV_AA);
-			//绘制红色分量直方图
-			line(histImage, Point((i - 1) * bin_w, hist_h - cvRound(r_hist.at<float>(i - 1))),Point((i)*bin_w, hist_h - cvRound(r_hist.at<float>(i))), Scalar(0, 0, 255), 2, CV_AA);
-		}
-		dst = histImage;
-		//imshow("output", histImage);
+	//步骤三：绘制直方图（render histogram chart）
+	for (int i = 1; i < histsize; i++)
+	{
+		//绘制蓝色分量直方图
+		line(histImage, Point((i - 1) * bin_w, hist_h - cvRound(b_hist.at<float>(i - 1))), Point((i)*bin_w, hist_h - cvRound(b_hist.at<float>(i))), Scalar(255, 0, 0), 2, CV_AA);
+		//绘制绿色分量直方图
+		line(histImage, Point((i - 1) * bin_w, hist_h - cvRound(g_hist.at<float>(i - 1))), Point((i)*bin_w, hist_h - cvRound(g_hist.at<float>(i))), Scalar(0, 255, 0), 2, CV_AA);
+		//绘制红色分量直方图
+		line(histImage, Point((i - 1) * bin_w, hist_h - cvRound(r_hist.at<float>(i - 1))), Point((i)*bin_w, hist_h - cvRound(r_hist.at<float>(i))), Scalar(0, 0, 255), 2, CV_AA);
+	}
+	dst = histImage;
+	//imshow("output", histImage);
 }
 
 void CMFCApplication1Dlg::Equalizehist(Mat& src, Mat& dst)
@@ -966,3 +981,5 @@ void CMFCApplication1Dlg::Equalizehist(Mat& src, Mat& dst)
 	merge(channels, dst);
 
 }
+
+

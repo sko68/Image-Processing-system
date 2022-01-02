@@ -56,48 +56,63 @@ public:
 
 	boolean IsExistImage();
 
+	afx_msg void OnSave();
+	void Save(/*UINT ID*/);
+
 	afx_msg void OnOpenfile();
+
 	afx_msg void OnClose();
+
 	afx_msg void OnLog();
+
 	afx_msg void OnExponent();
 	void ExpEnhance(Mat& imgage, Mat& dst, float r);
+
 	afx_msg void OnReverse();
 	void Reverse(Mat& image, Mat& dst);
+
 	afx_msg void OnSegmented();
 	void Segmented(Mat& image, Mat& dst);
+
 	afx_msg void OnBoxfilter();
 	afx_msg void OnBlur();
 	afx_msg void OnGaussianblur();
 	afx_msg void OnMedianblur();
 	afx_msg void OnBilateralfilter();
+
 	afx_msg void OnRoberts();
 	void Roberts(Mat& image, Mat& dst);
+
 	afx_msg void OnPrewitt();
 	void Prewitt(Mat& image, Mat& dst);
+
 	afx_msg void OnSobel();
 	void Sobel(Mat& image, Mat& dst);
+
 	afx_msg void OnLaplace();
 
 	afx_msg void OnIdealLowPass();
-	afx_msg void OnButterworthLowPass();
-	afx_msg void OnGaussianLowPass();
-	afx_msg void OnIdealHighPass();
-	afx_msg void OnButterworthHighPass();
-	afx_msg void OnGaussianHighPass();
 	Mat ideal_low_pass_filter(Mat& src, float sigma);
 
+	afx_msg void OnButterworthLowPass();
 	Mat butterworth_low_paass_filter(Mat& src, float d0, int n);
 
+	afx_msg void OnGaussianLowPass();
 	Mat gaussian_low_pass_filter(Mat& src, float d0);
 
+	afx_msg void OnIdealHighPass();
 	Mat ideal_high_pass_filter(Mat& src, float sigma);
 
+	afx_msg void OnButterworthHighPass();
 	Mat butterworth_high_paass_filter(Mat& src, float d0, int n);
 
+	afx_msg void OnGaussianHighPass();
 	Mat gaussian_high_pass_filter(Mat& src, float d0);
 
 	afx_msg void OnDrawhist();
-	afx_msg void OnEqualizehist();
 	void Drawhist(Mat& src, Mat& dst);
+
+	afx_msg void OnEqualizehist();
 	void Equalizehist(Mat& src, Mat& dst);
+
 };
